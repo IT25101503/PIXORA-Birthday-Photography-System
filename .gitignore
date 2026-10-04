@@ -1,0 +1,20 @@
+# Node Dependencies
+**/node_modules/
+**/dist/
+
+# Java / Maven Builds
+**/target/
+*.jar
+
+# IDE & Temporary Files
+.idea/
+.vscode/
+*.log
+
+# Large files and tools
+*.zip
+*.rar
+jdk17/
+tools/
+
+
