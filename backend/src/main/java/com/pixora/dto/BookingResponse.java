@@ -32,4 +32,7 @@ public class BookingResponse {
     private BigDecimal discountAmountLkr;
     private String promoCode;
     private String clientNotes;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("id")
+    public Long getId() { return bookingId; }
 }

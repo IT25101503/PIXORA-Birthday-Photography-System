@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping({"/api/v1/admin", "/api/admin"})
 @RequiredArgsConstructor
 public class AdminController {
 
@@ -78,6 +78,20 @@ public class AdminController {
     @PutMapping("/bookings/{id}/cancel")
     public ResponseEntity<BookingResponse> cancelBooking(@PathVariable Long id) {
         return ResponseEntity.ok(bookingService.cancelBooking(id));
+    }
+
+    @RequestMapping(value = "/bookings/{id}/status", method = {RequestMethod.PUT, RequestMethod.PATCH})
+    public ResponseEntity<BookingResponse> updateBookingStatus(@PathVariable Long id,
+                                                               @RequestBody java.util.Map<String, String> body) {
+        String status = body.getOrDefault("status", "").toUpperCase();
+        if ("COMPLETED".equals(status)) {
+            return ResponseEntity.ok(bookingService.completeBooking(id));
+        } else if ("CONFIRMED".equals(status)) {
+            return ResponseEntity.ok(bookingService.confirmBooking(id));
+        } else if ("CANCELLED".equals(status)) {
+            return ResponseEntity.ok(bookingService.cancelBooking(id));
+        }
+        return ResponseEntity.badRequest().build();
     }
 
     @PutMapping("/bookings/{id}/assign-photographer")
@@ -173,6 +187,17 @@ public class AdminController {
     @GetMapping("/reviews")
     public ResponseEntity<List<ReviewResponse>> getAllReviews() {
         return ResponseEntity.ok(reviewService.getAllReviews());
+    }
+
+    @GetMapping("/reviews/{id}")
+    public ResponseEntity<ReviewResponse> getReviewById(@PathVariable Long id) {
+        return ResponseEntity.ok(reviewService.getReviewById(id));
+    }
+
+    @PutMapping("/reviews/{id}")
+    public ResponseEntity<ReviewResponse> updateReview(@PathVariable Long id,
+                                                       @Valid @RequestBody ReviewRequest request) {
+        return ResponseEntity.ok(reviewService.updateReviewByAdmin(id, request));
     }
 
     @DeleteMapping("/reviews/{id}")

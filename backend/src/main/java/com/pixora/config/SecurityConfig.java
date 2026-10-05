@@ -32,6 +32,11 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(request -> {
                 var config = new org.springframework.web.cors.CorsConfiguration();
+                config.setAllowedOriginPatterns(java.util.List.of(
+                    "http://localhost:*",
+                    "http://127.0.0.1:*",
+                    "http://[::1]:*"
+                ));
                 config.setAllowedOrigins(java.util.List.of(
                     "http://localhost:5173",
                     "http://localhost:3000",
@@ -44,14 +49,26 @@ public class SecurityConfig {
                 return config;
             }))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/public/**").permitAll()
+                .requestMatchers("/api/v1/auth/**", "/api/auth/**").permitAll()
+                .requestMatchers("/api/v1/public/**", "/api/public/**").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/client/**").hasRole("CLIENT")
-                .requestMatchers("/api/photographer/**").hasRole("PHOTOGRAPHER")
+                .requestMatchers("/api/v1/admin/**", "/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/v1/client/**", "/api/client/**").hasRole("CLIENT")
+                .requestMatchers("/api/v1/photographer/**", "/api/photographer/**").hasRole("PHOTOGRAPHER")
                 .anyRequest().authenticated()
+            )
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("{\"error\":\"Unauthorized: please sign in with a valid token.\",\"status\":401}");
+                })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
+                    response.getWriter().write("{\"error\":\"Access denied: insufficient permissions.\",\"status\":403}");
+                })
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())

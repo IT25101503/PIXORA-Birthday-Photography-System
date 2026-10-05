@@ -30,6 +30,9 @@ public class BookingService {
     private final UserRepository userRepository;
     private final PackageRepository packageRepository;
     private final PaymentRepository paymentRepository;
+    private final com.pixora.repository.PhotoRepository photoRepository;
+    private final com.pixora.repository.ReviewRepository reviewRepository;
+    private final com.pixora.repository.ChatMessageRepository chatMessageRepository;
     private final NotificationService notificationService;
 
     @Transactional
@@ -60,7 +63,7 @@ public class BookingService {
                 .photographer(photographer)
                 .pkg(pkg)
                 .eventDate(request.getEventDate())
-                .eventTime(request.getEventTime())
+                .eventTime(request.getEventTime() != null ? request.getEventTime() : java.time.LocalTime.of(10, 0))
                 .venueAddress(request.getVenueAddress())
                 .totalAmountLkr(totalAmount)
                 .addons(request.getAddons())
@@ -119,7 +122,7 @@ public class BookingService {
         if (booking.getStatus() != Booking.BookingStatus.PENDING_ADMIN_APPROVAL) {
             throw new RuntimeException("Only PENDING_ADMIN_APPROVAL bookings can be hard-deleted by the client.");
         }
-        bookingRepository.deleteById(bookingId);
+        deleteBooking(bookingId);
     }
 
     @Transactional
@@ -229,7 +232,11 @@ public class BookingService {
     @Transactional
     public void deleteBooking(Long bookingId) {
         Booking booking = findBooking(bookingId);
-        bookingRepository.deleteById(booking.getBookingId());
+        reviewRepository.findByBookingBookingId(bookingId).ifPresent(reviewRepository::delete);
+        photoRepository.deleteAll(photoRepository.findByBookingBookingId(bookingId));
+        paymentRepository.findByBookingBookingId(bookingId).ifPresent(paymentRepository::delete);
+        chatMessageRepository.deleteByBookingBookingId(bookingId);
+        bookingRepository.delete(booking);
     }
 
     @Transactional(readOnly = true)

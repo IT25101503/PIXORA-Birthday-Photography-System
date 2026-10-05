@@ -68,6 +68,10 @@ const AdminDashboard = () => {
     expiryDate: ''
   });
 
+  // Review Edit modal state
+  const [editReviewModal, setEditReviewModal] = useState(null);
+  const [savingReview, setSavingReview] = useState(false);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -194,6 +198,32 @@ const AdminDashboard = () => {
       setReviews((prev) => prev.filter((r) => r.reviewId !== reviewId));
     } catch (err) {
       toast.error('Failed to delete review');
+    }
+  };
+
+  const handleUpdateReview = async (e) => {
+    e.preventDefault();
+    if (!editReviewModal) return;
+    const comment = editReviewModal.reviewComment?.trim() || '';
+    if (comment.length < 3 || comment.length > 1000) {
+      toast.warning('Feedback must be between 3 and 1000 characters');
+      return;
+    }
+    setSavingReview(true);
+    try {
+      const res = await api.put(`/api/admin/reviews/${editReviewModal.reviewId}`, {
+        starRating: editReviewModal.starRating,
+        reviewComment: comment
+      });
+      toast.success(`Review #${editReviewModal.reviewId} updated successfully!`);
+      setReviews((prev) => prev.map((r) => r.reviewId === editReviewModal.reviewId ? res.data : r));
+      setEditReviewModal(null);
+    } catch (err) {
+      console.error('Update review error', err);
+      const msg = err.response?.data?.error || err.response?.data?.message || 'Failed to update review';
+      toast.error(msg);
+    } finally {
+      setSavingReview(false);
     }
   };
 
@@ -1152,13 +1182,28 @@ const AdminDashboard = () => {
                             "{r.reviewComment}"
                           </td>
                           <td className="py-3 px-3 text-right">
-                            <button
-                              onClick={() => handleDeleteReview(r.reviewId)}
-                              className="p-1.5 rounded-lg bg-red-950/40 text-red-400 hover:bg-red-900 border border-red-800/40"
-                              title="Delete Review"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => setEditReviewModal({
+                                  reviewId: r.reviewId,
+                                  bookingId: r.bookingId,
+                                  starRating: r.starRating,
+                                  reviewComment: r.reviewComment,
+                                  clientName: r.clientName
+                                })}
+                                className="p-1.5 rounded-lg bg-gold/10 text-gold hover:bg-gold/20 border border-gold/30 transition-colors"
+                                title="Edit / Moderate Review"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteReview(r.reviewId)}
+                                className="p-1.5 rounded-lg bg-red-950/40 text-red-400 hover:bg-red-900 border border-red-800/40 transition-colors"
+                                title="Delete Review"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -1679,6 +1724,92 @@ const AdminDashboard = () => {
                   className="px-6 py-2.5 rounded-xl btn-gold text-xs font-semibold"
                 >
                   Create Promo Code
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit Review Modal (Admin Moderation) ───────────── */}
+      {editReviewModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="glass-card rounded-3xl p-6 sm:p-8 max-w-md w-full border border-gold/40 space-y-6">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-4">
+              <div>
+                <h3 className="font-serif-title text-lg font-bold text-white">Moderate / Edit Review</h3>
+                <p className="text-xs text-gray-400">
+                  Review #{editReviewModal.reviewId} from {editReviewModal.clientName || 'Client'}
+                </p>
+              </div>
+              <button
+                onClick={() => setEditReviewModal(null)}
+                className="p-1 text-gray-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateReview} className="space-y-4">
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">Star Rating (1 - 5)</label>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setEditReviewModal({ ...editReviewModal, starRating: star })}
+                      className="p-1 focus:outline-none"
+                    >
+                      <Star
+                        className={`w-6 h-6 transition-colors ${
+                          star <= (editReviewModal.starRating || 5)
+                            ? 'text-gold fill-gold'
+                            : 'text-gray-600'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                  <span className="text-xs font-mono text-gold ml-2 font-bold">
+                    {editReviewModal.starRating || 5}.0 Stars
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">Feedback / Testimonial</label>
+                <textarea
+                  required
+                  rows={4}
+                  maxLength={1000}
+                  value={editReviewModal.reviewComment}
+                  onChange={(e) => setEditReviewModal({ ...editReviewModal, reviewComment: e.target.value })}
+                  className="w-full bg-black/50 border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-gold outline-none resize-none"
+                  placeholder="Review feedback comment..."
+                />
+                <p className={`text-[10px] mt-1 ${
+                  (editReviewModal.reviewComment?.length || 0) < 3 || (editReviewModal.reviewComment?.length || 0) > 1000
+                    ? 'text-red-400'
+                    : 'text-green-400'
+                }`}>
+                  {editReviewModal.reviewComment?.length || 0}/1000 characters
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-gray-800">
+                <button
+                  type="button"
+                  onClick={() => setEditReviewModal(null)}
+                  className="px-4 py-2.5 rounded-xl border border-gray-700 text-xs text-gray-300 hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingReview}
+                  className="px-6 py-2.5 rounded-xl btn-gold text-xs font-semibold disabled:opacity-50"
+                >
+                  {savingReview ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>

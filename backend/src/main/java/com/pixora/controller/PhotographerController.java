@@ -13,21 +13,30 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.pixora.dto.ReviewResponse;
+import com.pixora.service.ReviewService;
+
 import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/photographer")
+@RequestMapping({"/api/v1/photographer", "/api/photographer"})
 @RequiredArgsConstructor
 public class PhotographerController {
 
     private final BookingService bookingService;
     private final PhotoService photoService;
     private final NotificationService notificationService;
+    private final ReviewService reviewService;
 
     @GetMapping("/bookings")
     public ResponseEntity<List<BookingResponse>> getMyBookings(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(bookingService.getPhotographerBookings(user.getUserId()));
+    }
+
+    @GetMapping("/reviews")
+    public ResponseEntity<List<ReviewResponse>> getMyReviews(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(reviewService.getReviewsByPhotographer(user.getUserId()));
     }
 
     @PutMapping("/bookings/{id}/respond")

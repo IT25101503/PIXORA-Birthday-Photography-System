@@ -44,16 +44,26 @@ public class AuthService implements UserDetailsService {
         if (userRepository.existsByEmail(email)) {
             throw new RuntimeException("This email is already registered. Please sign in or use a different email.");
         }
+        String phone = (request.getPhone() != null && !request.getPhone().isBlank())
+                ? request.getPhone().trim() : null;
+
+        boolean isPhotographer = "PHOTOGRAPHER".equalsIgnoreCase(request.getRole());
+        User.Role role = isPhotographer ? User.Role.PHOTOGRAPHER : User.Role.CLIENT;
+        User.AccountStatus status = isPhotographer ? User.AccountStatus.PENDING_APPROVAL : User.AccountStatus.ACTIVE;
+
         User user = User.builder()
                 .fullName(request.getFullName().trim())
                 .email(email)
                 .password(passwordEncoder.encode(request.getPassword()))
-                .phone(request.getPhone() != null ? request.getPhone().trim() : null)
-                .role(User.Role.CLIENT)
-                .accountStatus(User.AccountStatus.ACTIVE)
+                .phone(phone)
+                .portfolioUrl(request.getPortfolioUrl() != null && !request.getPortfolioUrl().isBlank()
+                        ? request.getPortfolioUrl().trim() : null)
+                .role(role)
+                .accountStatus(status)
                 .build();
         userRepository.save(user);
-        String token = jwtUtil.generateToken(user);
+
+        String token = (status == User.AccountStatus.ACTIVE) ? jwtUtil.generateToken(user) : null;
         return buildAuthResponse(user, token);
     }
 
@@ -72,11 +82,14 @@ public class AuthService implements UserDetailsService {
         if (userRepository.existsByEmail(email)) {
             throw new RuntimeException("This email is already registered. Please sign in or use a different email.");
         }
+        String phone = (request.getPhone() != null && !request.getPhone().isBlank())
+                ? request.getPhone().trim() : null;
+
         User user = User.builder()
                 .fullName(request.getFullName().trim())
                 .email(email)
                 .password(passwordEncoder.encode(request.getPassword()))
-                .phone(request.getPhone() != null ? request.getPhone().trim() : null)
+                .phone(phone)
                 .portfolioUrl(request.getPortfolioUrl() != null && !request.getPortfolioUrl().isBlank()
                         ? request.getPortfolioUrl().trim() : null)
                 .role(User.Role.PHOTOGRAPHER)

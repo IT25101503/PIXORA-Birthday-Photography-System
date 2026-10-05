@@ -21,4 +21,13 @@ public class ReviewResponse {
     private Integer starRating;
     private String reviewComment;
     private LocalDateTime createdAt;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("id")
+    public Long getId() { return reviewId; }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("rating")
+    public Integer getRating() { return starRating; }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("comment")
+    public String getComment() { return reviewComment; }
 }
