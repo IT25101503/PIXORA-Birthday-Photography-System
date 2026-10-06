@@ -20,4 +20,10 @@ public class PackageDto {
 
     private String description;
     private Boolean isActive;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("id")
+    public Long getId() { return packageId; }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("name")
+    public String getName() { return packageName; }
 }

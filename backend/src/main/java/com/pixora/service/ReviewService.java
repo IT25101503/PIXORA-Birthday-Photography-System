@@ -27,20 +27,22 @@ public class ReviewService {
 
     @Transactional
     public ReviewResponse submitReview(Long bookingId, Long clientId, ReviewRequest request) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+        Long targetBookingId = (bookingId != null) ? bookingId : request.getBookingId();
+        if (targetBookingId == null) {
+            throw new RuntimeException("Booking ID is required to submit a review.");
+        }
+
+        Booking booking = bookingRepository.findById(targetBookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + targetBookingId));
 
         if (booking.getStatus() != Booking.BookingStatus.COMPLETED) {
-            throw new RuntimeException("Reviews can only be submitted for completed bookings");
+            throw new RuntimeException("Reviews can only be submitted for completed celebrations.");
         }
         if (!booking.getClient().getUserId().equals(clientId)) {
-            throw new RuntimeException("You can only review your own bookings");
+            throw new RuntimeException("You can only review your own bookings.");
         }
-        if (booking.getPhotographer() == null) {
-            throw new RuntimeException("This booking has no assigned photographer");
-        }
-        if (reviewRepository.findByBookingBookingId(bookingId).isPresent()) {
-            throw new RuntimeException("Review already submitted for this booking");
+        if (reviewRepository.findByBookingBookingId(targetBookingId).isPresent()) {
+            throw new RuntimeException("Review already submitted for this booking.");
         }
 
         Review review = Review.builder()
@@ -64,10 +66,35 @@ public class ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + reviewId));
         if (!review.getClient().getUserId().equals(clientId)) {
-            throw new RuntimeException("You can only edit your own reviews");
+            throw new RuntimeException("You can only edit your own reviews.");
         }
         review.setStarRating(request.getStarRating());
         review.setReviewComment(request.getReviewComment());
+        return toResponse(reviewRepository.save(review));
+    }
+
+    @Transactional
+    public ReviewResponse updateReviewByBooking(Long bookingId, Long clientId, ReviewRequest request) {
+        Review review = reviewRepository.findByBookingBookingId(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("No review found for booking #" + bookingId));
+        if (!review.getClient().getUserId().equals(clientId)) {
+            throw new RuntimeException("You can only edit your own reviews.");
+        }
+        review.setStarRating(request.getStarRating());
+        review.setReviewComment(request.getReviewComment());
+        return toResponse(reviewRepository.save(review));
+    }
+
+    @Transactional
+    public ReviewResponse updateReviewByAdmin(Long reviewId, ReviewRequest request) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + reviewId));
+        if (request.getStarRating() != null) {
+            review.setStarRating(request.getStarRating());
+        }
+        if (request.getReviewComment() != null) {
+            review.setReviewComment(request.getReviewComment());
+        }
         return toResponse(reviewRepository.save(review));
     }
 
@@ -76,7 +103,23 @@ public class ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + reviewId));
         if (!review.getClient().getUserId().equals(clientId)) {
-            throw new RuntimeException("You can only delete your own reviews");
+            throw new RuntimeException("You can only delete your own reviews.");
+        }
+        Booking booking = review.getBooking();
+        if (booking != null) {
+            booking.setReview(null);
+            bookingRepository.save(booking);
+        }
+        reviewRepository.delete(review);
+        reviewRepository.flush();
+    }
+
+    @Transactional
+    public void deleteReviewByBookingAndClient(Long bookingId, Long clientId) {
+        Review review = reviewRepository.findByBookingBookingId(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("No review found for booking #" + bookingId));
+        if (!review.getClient().getUserId().equals(clientId)) {
+            throw new RuntimeException("You can only delete your own reviews.");
         }
         Booking booking = review.getBooking();
         if (booking != null) {
@@ -113,6 +156,12 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
+    public List<ReviewResponse> getReviewsByClient(Long clientId) {
+        return reviewRepository.findByClientUserId(clientId)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<ReviewResponse> getReviewsByPhotographer(Long photographerId) {
         return reviewRepository.findByPhotographerUserId(photographerId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
@@ -123,14 +172,14 @@ public class ReviewService {
         return reviewRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    private ReviewResponse toResponse(Review r) {
+    public ReviewResponse toResponse(Review r) {
         return ReviewResponse.builder()
                 .reviewId(r.getReviewId())
-                .bookingId(r.getBooking().getBookingId())
-                .clientId(r.getClient().getUserId())
-                .clientName(r.getClient().getFullName())
-                .photographerId(r.getPhotographer().getUserId())
-                .photographerName(r.getPhotographer().getFullName())
+                .bookingId(r.getBooking() != null ? r.getBooking().getBookingId() : null)
+                .clientId(r.getClient() != null ? r.getClient().getUserId() : null)
+                .clientName(r.getClient() != null ? r.getClient().getFullName() : "Client")
+                .photographerId(r.getPhotographer() != null ? r.getPhotographer().getUserId() : null)
+                .photographerName(r.getPhotographer() != null ? r.getPhotographer().getFullName() : "Pixora Team")
                 .starRating(r.getStarRating())
                 .reviewComment(r.getReviewComment())
                 .createdAt(r.getCreatedAt())

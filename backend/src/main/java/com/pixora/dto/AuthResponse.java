@@ -16,4 +16,9 @@ public class AuthResponse {
     private String fullName;
     private String role;
     private String accountStatus;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("name")
+    public String getName() {
+        return fullName;
+    }
 }

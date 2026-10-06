@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping({"/api/v1/auth", "/api/auth"})
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -30,6 +30,20 @@ public class AuthController {
     @PostMapping("/photographer-apply")
     public ResponseEntity<AuthResponse> applyPhotographer(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authService.applyPhotographer(request));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<AuthResponse> getCurrentUser(@org.springframework.security.core.annotation.AuthenticationPrincipal com.pixora.entity.User user) {
+        if (user == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(AuthResponse.builder()
+                .userId(user.getUserId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .role(user.getRole().name())
+                .accountStatus(user.getAccountStatus().name())
+                .build());
     }
 
     @PostMapping("/forgot-password/send-otp")

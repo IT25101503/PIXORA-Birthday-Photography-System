@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/public")
+@RequestMapping({"/api/v1/public", "/api/public"})
 @RequiredArgsConstructor
 public class PublicController {
 
@@ -46,5 +46,10 @@ public class PublicController {
     @GetMapping("/reviews")
     public ResponseEntity<List<ReviewResponse>> getAllReviews() {
         return ResponseEntity.ok(reviewService.getAllReviews());
+    }
+
+    @GetMapping("/reviews/{id}")
+    public ResponseEntity<ReviewResponse> getReviewById(@PathVariable Long id) {
+        return ResponseEntity.ok(reviewService.getReviewById(id));
     }
 }

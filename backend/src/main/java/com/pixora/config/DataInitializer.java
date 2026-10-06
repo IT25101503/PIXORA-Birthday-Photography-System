@@ -31,6 +31,7 @@ public class DataInitializer implements CommandLineRunner {
 
         // Add new columns to bookings table if not exist
         String[] bookingCols = {
+            "ALTER TABLE bookings ADD COLUMN staff_status VARCHAR(50) NOT NULL DEFAULT 'UNSTAFFED'",
             "ALTER TABLE bookings ADD COLUMN addons VARCHAR(500) NULL",
             "ALTER TABLE bookings ADD COLUMN delivery_tier VARCHAR(50) DEFAULT 'STANDARD'",
             "ALTER TABLE bookings ADD COLUMN delivery_fee_lkr DECIMAL(12,2) DEFAULT 0",
@@ -47,6 +48,14 @@ public class DataInitializer implements CommandLineRunner {
         // Add is_favorite to photos table if not exist
         try {
             jdbcTemplate.execute("ALTER TABLE photos ADD COLUMN is_favorite BOOLEAN NOT NULL DEFAULT FALSE");
+        } catch (Exception ignored) {}
+
+        // Ensure reviews table columns
+        try {
+            jdbcTemplate.execute("ALTER TABLE reviews ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
+        } catch (Exception ignored) {}
+        try {
+            jdbcTemplate.execute("ALTER TABLE reviews MODIFY COLUMN photographer_id BIGINT NULL");
         } catch (Exception ignored) {}
 
         // Seed default promo codes

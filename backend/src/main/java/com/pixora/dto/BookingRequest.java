@@ -13,15 +13,17 @@ public class BookingRequest {
     private Long photographerId;
 
     @NotNull
+    @com.fasterxml.jackson.annotation.JsonAlias({"id"})
     private Long packageId;
 
     @NotNull @FutureOrPresent
     private LocalDate eventDate;
 
-    @NotNull
+    @com.fasterxml.jackson.annotation.JsonAlias({"time"})
     private LocalTime eventTime;
 
     @NotBlank
+    @com.fasterxml.jackson.annotation.JsonAlias({"location", "eventLocation", "address"})
     private String venueAddress;
 
     private String addons;
@@ -29,5 +31,6 @@ public class BookingRequest {
     private java.math.BigDecimal deliveryFeeLkr;
     private java.math.BigDecimal discountAmountLkr;
     private String promoCode;
+    @com.fasterxml.jackson.annotation.JsonAlias({"notes", "specialRequests", "instructions"})
     private String clientNotes;
 }

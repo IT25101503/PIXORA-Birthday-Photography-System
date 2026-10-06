@@ -27,7 +27,7 @@ public class Review {
     private User client;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "photographer_id", nullable = false)
+    @JoinColumn(name = "photographer_id", nullable = true)
     private User photographer;
 
     @Column(name = "star_rating", nullable = false)

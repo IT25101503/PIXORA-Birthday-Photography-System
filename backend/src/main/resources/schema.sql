@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     venue_address VARCHAR(500) NOT NULL,
     total_amount_lkr DECIMAL(12,2) NOT NULL,
     status ENUM('PENDING_ADMIN_APPROVAL','CONFIRMED','PAID','CANCELLED','COMPLETED') NOT NULL DEFAULT 'PENDING_ADMIN_APPROVAL',
+    staff_status ENUM('UNSTAFFED','PENDING_ACCEPTANCE','STAFFED','DECLINED') NOT NULL DEFAULT 'UNSTAFFED',
     FOREIGN KEY (client_id) REFERENCES users(user_id),
     FOREIGN KEY (photographer_id) REFERENCES users(user_id),
     FOREIGN KEY (package_id) REFERENCES packages(package_id)
@@ -59,9 +60,10 @@ CREATE TABLE IF NOT EXISTS reviews (
     review_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     booking_id BIGINT NOT NULL UNIQUE,
     client_id BIGINT NOT NULL,
-    photographer_id BIGINT NOT NULL,
+    photographer_id BIGINT,
     star_rating INT NOT NULL CHECK (star_rating BETWEEN 1 AND 5),
     review_comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (booking_id) REFERENCES bookings(booking_id),
     FOREIGN KEY (client_id) REFERENCES users(user_id),
     FOREIGN KEY (photographer_id) REFERENCES users(user_id)

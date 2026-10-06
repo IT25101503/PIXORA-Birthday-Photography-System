@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/client")
+@RequestMapping({"/api/v1/client", "/api/client"})
 @RequiredArgsConstructor
 public class ClientController {
 
@@ -123,8 +123,8 @@ public class ClientController {
     }
 
     // Reviews
-    @PostMapping("/bookings/{id}/review")
-    public ResponseEntity<ReviewResponse> submitReview(@PathVariable Long id,
+    @PostMapping({"/bookings/{id}/review", "/reviews"})
+    public ResponseEntity<ReviewResponse> submitReview(@PathVariable(required = false) Long id,
                                                        @AuthenticationPrincipal User user,
                                                        @Valid @RequestBody ReviewRequest request) {
         return ResponseEntity.ok(reviewService.submitReview(id, user.getUserId(), request));
@@ -137,6 +137,16 @@ public class ClientController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/reviews")
+    public ResponseEntity<List<ReviewResponse>> getMyReviews(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(reviewService.getReviewsByClient(user.getUserId()));
+    }
+
+    @GetMapping("/reviews/{id}")
+    public ResponseEntity<ReviewResponse> getReviewById(@PathVariable Long id) {
+        return ResponseEntity.ok(reviewService.getReviewById(id));
+    }
+
     @PutMapping("/reviews/{reviewId}")
     public ResponseEntity<ReviewResponse> updateReview(@PathVariable Long reviewId,
                                                        @AuthenticationPrincipal User user,
@@ -144,10 +154,24 @@ public class ClientController {
         return ResponseEntity.ok(reviewService.updateReview(reviewId, user.getUserId(), request));
     }
 
+    @PutMapping("/bookings/{bookingId}/review")
+    public ResponseEntity<ReviewResponse> updateReviewByBooking(@PathVariable Long bookingId,
+                                                               @AuthenticationPrincipal User user,
+                                                               @Valid @RequestBody ReviewRequest request) {
+        return ResponseEntity.ok(reviewService.updateReviewByBooking(bookingId, user.getUserId(), request));
+    }
+
     @DeleteMapping("/reviews/{reviewId}")
     public ResponseEntity<Void> deleteReview(@PathVariable Long reviewId,
                                              @AuthenticationPrincipal User user) {
         reviewService.deleteReviewByClient(reviewId, user.getUserId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/bookings/{bookingId}/review")
+    public ResponseEntity<Void> deleteReviewByBooking(@PathVariable Long bookingId,
+                                                     @AuthenticationPrincipal User user) {
+        reviewService.deleteReviewByBookingAndClient(bookingId, user.getUserId());
         return ResponseEntity.noContent().build();
     }
 

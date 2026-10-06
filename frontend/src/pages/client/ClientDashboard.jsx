@@ -256,8 +256,8 @@ const ClientDashboard = () => {
   const handleSubmitReview = async (e) => {
     e.preventDefault();
     const comment = reviewComment.trim();
-    if (comment.length < 5 || comment.length > 100) {
-      toast.warning('Feedback must be between 5 and 100 characters long.');
+    if (comment.length < 3 || comment.length > 1000) {
+      toast.warning('Feedback must be between 3 and 1000 characters long.');
       return;
     }
     setSubmittingReview(true);
@@ -287,8 +287,8 @@ const ClientDashboard = () => {
   const handleSaveEditReview = async (e) => {
     e.preventDefault();
     const comment = editReview.reviewComment.trim();
-    if (comment.length < 5 || comment.length > 100) {
-      toast.warning('Feedback must be between 5 and 100 characters long.');
+    if (comment.length < 3 || comment.length > 1000) {
+      toast.warning('Feedback must be between 3 and 1000 characters long.');
       return;
     }
     try {
@@ -924,7 +924,7 @@ const ClientDashboard = () => {
                         type="text"
                         placeholder="MM/YY"
                         value={modalCardExpiry}
-                        onChange={handleModalExpiryChange}
+                        onChange={handleModalCardExpiryChange}
                         maxLength={5}
                         className="w-full bg-[#151515] border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-gold font-mono"
                         required
@@ -937,7 +937,7 @@ const ClientDashboard = () => {
                           type="password"
                           placeholder="•••"
                           value={modalCardCvv}
-                          onChange={handleModalCvvChange}
+                          onChange={handleModalCardCvvChange}
                           maxLength={4}
                           className="w-full bg-[#151515] border border-gray-700 rounded-xl px-4 py-3 pr-10 text-sm text-white focus:outline-none focus:border-gold font-mono"
                           required
@@ -1045,18 +1045,18 @@ const ClientDashboard = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                  Your Feedback <span className="text-gray-500">(5–100 characters)</span>
+                  Your Feedback <span className="text-gray-500">(3–1000 characters)</span>
                 </label>
                 <textarea
-                  rows={3}
+                  rows={4}
                   placeholder="e.g. Great photos and wonderful celebration memories!"
                   value={reviewComment}
                   onChange={(e) => setReviewComment(e.target.value)}
-                  maxLength={100}
+                  maxLength={1000}
                   className="w-full bg-[#151515] border border-gray-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-gold"
                 />
-                <p className={`text-[10px] mt-1 ${reviewComment.length < 5 || reviewComment.length > 100 ? 'text-red-400' : 'text-green-400'}`}>
-                  {reviewComment.length}/100 characters
+                <p className={`text-[10px] mt-1 ${reviewComment.length < 3 || reviewComment.length > 1000 ? 'text-red-400' : 'text-green-400'}`}>
+                  {reviewComment.length}/1000 characters
                 </p>
               </div>
 
@@ -1110,18 +1110,18 @@ const ClientDashboard = () => {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                  Feedback <span className="text-gray-500">(5–100 characters)</span>
+                  Feedback <span className="text-gray-500">(3–1000 characters)</span>
                 </label>
                 <textarea
-                  rows={3}
+                  rows={4}
                   placeholder="e.g. Great photos and wonderful celebration memories!"
                   value={editReview.reviewComment}
                   onChange={(e) => setEditReview({ ...editReview, reviewComment: e.target.value })}
-                  maxLength={100}
+                  maxLength={1000}
                   className="w-full bg-[#151515] border border-gray-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-gold"
                 />
-                <p className={`text-[10px] mt-1 ${editReview.reviewComment.length < 5 || editReview.reviewComment.length > 100 ? 'text-red-400' : 'text-green-400'}`}>
-                  {editReview.reviewComment.length}/100 characters
+                <p className={`text-[10px] mt-1 ${editReview.reviewComment.length < 3 || editReview.reviewComment.length > 1000 ? 'text-red-400' : 'text-green-400'}`}>
+                  {editReview.reviewComment.length}/1000 characters
                 </p>
               </div>
               <div className="flex justify-end space-x-3 pt-2">
