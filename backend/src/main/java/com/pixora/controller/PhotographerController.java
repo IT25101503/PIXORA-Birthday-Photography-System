@@ -39,6 +39,7 @@ public class PhotographerController {
         return ResponseEntity.ok(reviewService.getReviewsByPhotographer(user.getUserId()));
     }
 
+    //Photographer's response to a booking assignment made by a client(IT25100884)
     @PutMapping("/bookings/{id}/respond")
     public ResponseEntity<BookingResponse> respondToAssignment(@PathVariable Long id,
                                                                @RequestParam String action,
