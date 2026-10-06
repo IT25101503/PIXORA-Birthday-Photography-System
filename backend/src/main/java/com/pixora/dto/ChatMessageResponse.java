@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-// Data Transfer Object for returning chat message details in response payloads
+// Data Transfer Object for returning chat message details in response payloads.
 @Data
 @Builder
 @NoArgsConstructor
